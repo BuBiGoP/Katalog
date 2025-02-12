@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Аудиогид с подсветкой</title>
+    <title>Аудиогид с подсветкой зон</title>
     <style>
         #map {
-            width: 100%;
+            width: 400px;
             <!-- height: 400px; -->
             display: block;
             position: relative;
@@ -40,10 +40,12 @@
 <body>
     <img id="map" src="hall-map.jpg" alt="Карта зала изваяний" usemap="#sculpture-map">
     <map name="sculpture-map">
-        <!-- Первая зона: 5 минут -->
-        <area shape="circle" coords="100,100,50" alt="Изваяние 1" data-audio="audio1.mp3" data-start-time="300">
-        <!-- Вторая зона: 10 минут -->
-        <area shape="circle" coords="300,200,50" alt="Изваяние 2" data-audio="audio1.mp3" data-start-time="600">
+    <area target="" alt="" title="" href="" coords="197,272,10" shape="circle" data-audio="audio1.mp3" data-start-time="1" data-end-time="141">
+    <area target="" alt="2" title="" href="" coords="208,142,10" shape="circle" data-audio="audio1.mp3" data-start-time="141" data-end-time="381">
+    <area target="" alt="3" title="" href="" coords="175,143,10" shape="circle" data-audio="audio1.mp3" data-start-time="382" data-end-time="398">
+    <area target="" alt="4" title="" href="" coords="182,173,10" shape="circle" data-audio="audio1.mp3" data-start-time="398" data-end-time="430">
+    <area target="" alt="5" title="" href="" coords="220,173,10" shape="circle" data-audio="audio1.mp3" data-start-time="430" data-end-time="499">
+
     </map>
 
     <!-- Элемент для подсветки -->
@@ -86,29 +88,29 @@
                     // Если аудио уже воспроизводится, просто перематываем
                     audioPlayer.currentTime = startTime;
                 }
-
-                // Подсветка области при клике
-                const coords = area.getAttribute('coords').split(',').map(Number);
-                highlight.style.left = `${coords[0] - coords[2]}px`;
-                highlight.style.top = `${coords[1] - coords[2]}px`;
-                highlight.style.width = `${coords[2] * 2}px`;
-                highlight.style.height = `${coords[2] * 2}px`;
-                highlight.style.display = 'block';
             });
+        });
 
-            // Подсветка области при наведении
-            area.addEventListener('mouseenter', () => {
-                const coords = area.getAttribute('coords').split(',').map(Number);
-                highlight.style.left = `${coords[0] - coords[2]}px`;
-                highlight.style.top = `${coords[1] - coords[2]}px`;
-                highlight.style.width = `${coords[2] * 2}px`;
-                highlight.style.height = `${coords[2] * 2}px`;
-                highlight.style.display = 'block';
-            });
+        // Отслеживание времени воспроизведения
+        audioPlayer.addEventListener('timeupdate', () => {
+            const currentTime = audioPlayer.currentTime;
 
-            // Скрытие подсветки при уходе курсора
-            area.addEventListener('mouseleave', () => {
-                highlight.style.display = 'none';
+            // Проверяем каждую зону
+            document.querySelectorAll('area').forEach(area => {
+                const startTime = parseFloat(area.getAttribute('data-start-time'));
+                const endTime = parseFloat(area.getAttribute('data-end-time'));
+
+                // Если текущее время попадает в диапазон зоны
+                if (currentTime >= startTime && currentTime <= endTime) {
+                    const coords = area.getAttribute('coords').split(',').map(Number);
+                    highlight.style.left = `${coords[0] - coords[2]}px`;
+                    highlight.style.top = `${coords[1] - coords[2]}px`;
+                    highlight.style.width = `${coords[2] * 2}px`;
+                    highlight.style.height = `${coords[2] * 2}px`;
+                    highlight.style.display = 'block';
+                } else {
+                    highlight.style.display = 'none';
+                }
             });
         });
 
