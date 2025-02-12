@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Аудиогид с подсветкой</title>
+    <style>
+        #map {
+            width: 100%;
+            <!-- height: 400px; -->
+            display: block;
+            position: relative;
+        }
+        #highlight {
+            position: absolute;
+            border: 2px solid yellow;
+            background-color: rgba(255, 255, 0, 0.3);
+            border-radius: 50%;
+            pointer-events: none;
+            display: none;
+        }
+        #controls {
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #play-pause-btn {
+            font-size: 24px;
+            cursor: pointer;
+            background: none;
+            border: none;
+        }
+        #volume-slider {
+            width: 100px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <img id="map" src="hall-map.jpg" alt="Карта зала изваяний" usemap="#sculpture-map">
+    <map name="sculpture-map">
+        <!-- Первая зона: 5 минут -->
+        <area shape="circle" coords="100,100,50" alt="Изваяние 1" data-audio="audio1.mp3" data-start-time="300">
+        <!-- Вторая зона: 10 минут -->
+        <area shape="circle" coords="300,200,50" alt="Изваяние 2" data-audio="audio1.mp3" data-start-time="600">
+    </map>
+
+    <!-- Элемент для подсветки -->
+    <div id="highlight"></div>
+
+    <audio id="audio-player">
+        <source src="audio1.mp3" type="audio/mpeg">
+        Ваш браузер не поддерживает аудиоэлемент.
+    </audio>
+
+    <!-- Кастомные элементы управления -->
+    <div id="controls">
+        <button id="play-pause-btn">⏯️</button>
+        <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="1">
+    </div>
+
+    <script>
+        const audioPlayer = document.getElementById('audio-player');
+        const playPauseBtn = document.getElementById('play-pause-btn');
+        const volumeSlider = document.getElementById('volume-slider');
+        const highlight = document.getElementById('highlight');
+
+        // Обработка кликов по областям карты
+        document.querySelectorAll('area').forEach(area => {
+            area.addEventListener('click', (event) => {
+                event.preventDefault();
+
+                // Получаем время начала воспроизведения из атрибута data-start-time
+                const startTime = parseFloat(area.getAttribute('data-start-time'));
+
+                // Если аудио на паузе или не воспроизводится, сначала запускаем его
+                if (audioPlayer.paused) {
+                    audioPlayer.play().then(() => {
+                        // Устанавливаем текущее время после начала воспроизведения
+                        audioPlayer.currentTime = startTime;
+                    }).catch(error => {
+                        console.error("Ошибка воспроизведения аудио:", error);
+                    });
+                } else {
+                    // Если аудио уже воспроизводится, просто перематываем
+                    audioPlayer.currentTime = startTime;
+                }
+
+                // Подсветка области при клике
+                const coords = area.getAttribute('coords').split(',').map(Number);
+                highlight.style.left = `${coords[0] - coords[2]}px`;
+                highlight.style.top = `${coords[1] - coords[2]}px`;
+                highlight.style.width = `${coords[2] * 2}px`;
+                highlight.style.height = `${coords[2] * 2}px`;
+                highlight.style.display = 'block';
+            });
+
+            // Подсветка области при наведении
+            area.addEventListener('mouseenter', () => {
+                const coords = area.getAttribute('coords').split(',').map(Number);
+                highlight.style.left = `${coords[0] - coords[2]}px`;
+                highlight.style.top = `${coords[1] - coords[2]}px`;
+                highlight.style.width = `${coords[2] * 2}px`;
+                highlight.style.height = `${coords[2] * 2}px`;
+                highlight.style.display = 'block';
+            });
+
+            // Скрытие подсветки при уходе курсора
+            area.addEventListener('mouseleave', () => {
+                highlight.style.display = 'none';
+            });
+        });
+
+        // Управление воспроизведением (кнопка паузы)
+        playPauseBtn.addEventListener('click', () => {
+            if (audioPlayer.paused) {
+                audioPlayer.play();
+                playPauseBtn.textContent = "⏸️"; // Иконка паузы
+            } else {
+                audioPlayer.pause();
+                playPauseBtn.textContent = "⏯️"; // Иконка воспроизведения
+            }
+        });
+
+        // Управление громкостью (ползунок)
+        volumeSlider.addEventListener('input', () => {
+            audioPlayer.volume = volumeSlider.value;
+        });
+
+        // Обновление иконки кнопки при изменении состояния аудио
+        audioPlayer.addEventListener('play', () => {
+            playPauseBtn.textContent = "⏸️";
+        });
+
+        audioPlayer.addEventListener('pause', () => {
+            playPauseBtn.textContent = "⏯️";
+        });
+    </script>
+</body>
+</html>
